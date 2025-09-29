@@ -1,49 +1,99 @@
 import Table from '@/components/ui/Table'
 import Button from '@/components/ui/Button'
+import type { ParametroLegal } from '@/lib/database.types'
 
 interface TablaParametrosProps {
   onCrearNuevaVigencia: () => void
+  parametros: ParametroLegal[]
 }
 
-interface ParametroLegal {
-  parametro: string
-  valorActual: string
-  vigencia: string
-}
+export default function TablaParametros({ onCrearNuevaVigencia, parametros }: TablaParametrosProps) {
+  const headers = ['Parámetro', 'Valor Actual', 'Vigencia', 'Estado', 'Descripción']
 
-export default function TablaParametros({ onCrearNuevaVigencia }: TablaParametrosProps) {
-  // Mock data para parámetros legales
-  const parametrosLegales: ParametroLegal[] = [
-    {
-      parametro: 'RMV (Remuneración Mínima Vital)',
-      valorActual: 'S/ 1,025.00',
-      vigencia: '01/01/2024 - Vigente'
-    },
-    {
-      parametro: 'Tasa Bono BETA',
-      valorActual: '30% de la RMV',
-      vigencia: '01/01/2024 - Vigente'
-    },
-    {
-      parametro: 'Gratificación Agraria',
-      valorActual: '2 RMV anuales',
-      vigencia: '15/01/2024 - Vigente'
-    },
-    {
-      parametro: 'CTS Agraria',
-      valorActual: '15 días por año',
-      vigencia: '01/01/2024 - Vigente'
+  // Función helper para formatear el tipo de parámetro
+  const formatTipoParametro = (tipo: string): string => {
+    const formatMap: Record<string, string> = {
+      'rmv': 'RMV (Remuneración Mínima Vital)',
+      'tasa_bono_beta': 'Tasa Bono BETA',
+      'tasa_gratificacion': 'Gratificación Agraria',
+      'tasa_cts': 'CTS Agraria',
+      'tasa_essalud_extra': 'Tasa EsSalud Extra'
     }
-  ]
+    return formatMap[tipo] || tipo
+  }
 
-  const headers = ['Parámetro', 'Valor Actual', 'Vigencia']
+  // Función helper para formatear el valor
+  const formatValor = (valor: number, tipo: string): string => {
+    if (tipo === 'rmv') {
+      return `S/ ${valor.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    }
+    if (tipo.includes('tasa')) {
+      return `${valor}%`
+    }
+    return valor.toString()
+  }
 
-  // Convertir los datos para que coincidan con la interfaz de Table
-  const dataForTable = parametrosLegales.map(param => ({
-    'Parámetro': param.parametro,
-    'Valor Actual': param.valorActual,
-    'Vigencia': param.vigencia
-  }))
+  // Función helper para formatear la vigencia
+  const formatVigencia = (fechaInicio: string, fechaFin: string | null): string => {
+    const inicio = new Date(fechaInicio).toLocaleDateString('es-ES')
+    if (fechaFin) {
+      const fin = new Date(fechaFin).toLocaleDateString('es-ES')
+      return `${inicio} - ${fin}`
+    }
+    return `Desde ${inicio}`
+  }
+
+  // Función helper para determinar el estado del parámetro
+  const getEstadoParametro = (fechaInicio: string, fechaFin: string | null): { estado: string, color: string } => {
+    const hoy = new Date()
+    const inicio = new Date(fechaInicio)
+
+    // Si tiene fecha de fin, verificarla
+    if (fechaFin) {
+      const fin = new Date(fechaFin)
+      if (hoy > fin) {
+        return { estado: 'Vencido', color: 'text-red-600 bg-red-50' }
+      }
+      if (hoy >= inicio && hoy <= fin) {
+        return { estado: 'Vigente', color: 'text-green-600 bg-green-50' }
+      }
+      if (hoy < inicio) {
+        return { estado: 'Futuro', color: 'text-blue-600 bg-blue-50' }
+      }
+    }
+
+    // Sin fecha de fin
+    if (hoy >= inicio) {
+      return { estado: 'Vigente', color: 'text-green-600 bg-green-50' }
+    } else {
+      return { estado: 'Futuro', color: 'text-blue-600 bg-blue-50' }
+    }
+  }
+
+  // Función helper para formatear la descripción
+  const formatDescripcion = (descripcion: string | null): string => {
+    if (!descripcion) return '-'
+    return descripcion.length > 50
+      ? `${descripcion.substring(0, 50)}...`
+      : descripcion
+  }
+
+  // Convertir los datos reales para que coincidan con la interfaz de Table
+  const dataForTable = parametros.map(param => {
+    const estadoInfo = getEstadoParametro(param.fecha_inicio_vigencia, param.fecha_fin_vigencia)
+
+    return {
+      'Parámetro': formatTipoParametro(param.tipo),
+      'Valor Actual': formatValor(param.valor, param.tipo),
+      'Vigencia': formatVigencia(param.fecha_inicio_vigencia, param.fecha_fin_vigencia),
+      'Estado': (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${estadoInfo.color}`}>
+          {estadoInfo.estado}
+        </span>
+      ),
+      'Descripción': formatDescripcion(param.descripcion)
+    }
+  })
 
   return (
     <div className="space-y-6">
@@ -67,10 +117,22 @@ export default function TablaParametros({ onCrearNuevaVigencia }: TablaParametro
 
       {/* Tabla de parámetros */}
       <div className="bg-white rounded-lg shadow border border-gray-200">
-        <Table
-          headers={headers}
-          data={dataForTable}
-        />
+        {parametros.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay parámetros legales</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              No se encontraron parámetros legales configurados en la base de datos.
+            </p>
+          </div>
+        ) : (
+          <Table
+            headers={headers}
+            data={dataForTable}
+          />
+        )}
       </div>
 
       {/* Información adicional */}
