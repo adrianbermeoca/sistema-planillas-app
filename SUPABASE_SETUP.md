@@ -78,16 +78,29 @@ type TipoParametro = "rmv" | "tasa_bono_beta" | "tasa_gratificacion" | "tasa_cts
 ## 🎯 Uso en Componentes
 
 ```typescript
-import { supabase, type Trabajador } from '@/lib/supabase/client'
+import { supabase, type Trabajador, type ParametroLegal } from '@/lib/supabase/client'
+import { getLegalParameters, createLegalParameter } from '@/services/api'
 
 // Estado tipado
 const [trabajadores, setTrabajadores] = useState<Trabajador[]>([])
+const [parametros, setParametros] = useState<ParametroLegal[]>([])
 
-// Query tipado
-const { data, error } = await supabase
-  .from('trabajadores')  // ← Autocomplete disponible
-  .select('*')
-  .eq('activo', true)    // ← Tipos validados
+// Query tipado con función de API
+const parametrosData = await getLegalParameters(supabase)
+
+// Inserción tipada con manejo de errores robusto
+try {
+  const newParameter = await createLegalParameter(supabase, {
+    tipo: 'rmv',
+    valor: 1025.00,
+    fecha_inicio_vigencia: '2025-10-01',
+    fecha_fin_vigencia: null,
+    descripcion: 'RMV actualizada según normativa'
+  })
+} catch (error) {
+  // Error específico será mostrado: "Error de base de datos: [mensaje]"
+  console.error('Error creating parameter:', error.message)
+}
 ```
 
 ## 🔧 Scripts Disponibles
@@ -130,3 +143,24 @@ fs.writeFileSync('src/lib/database.types.ts', result)
 ### Tipos desactualizados
 1. Ejecuta `npm run types` después de cambios en BD
 2. Reinicia TypeScript server en VS Code: `Ctrl+Shift+P` → "TypeScript: Restart TS Server"
+
+### RLS Policy Issues
+Si obtienes errores como `"new row violates row-level security policy"`:
+1. **Para desarrollo**: Deshabilita RLS temporalmente
+   ```sql
+   ALTER TABLE parametros_legales DISABLE ROW LEVEL SECURITY;
+   ```
+2. **Para producción**: Crea políticas específicas
+   ```sql
+   CREATE POLICY "Allow authenticated users to insert"
+   ON parametros_legales FOR INSERT TO authenticated WITH CHECK (true);
+   ```
+
+## 🚀 Estado Actual de Implementación
+
+### ✅ Módulo Parámetros Legales (COMPLETADO)
+- **API robusta**: `src/services/api.ts` con manejo avanzado de errores
+- **Type guards**: `src/utils/isPostgrestError.ts` para errores específicos
+- **UI completa**: Tabla de visualización y formulario de creación
+- **Validaciones**: En tiempo real con feedback UX
+- **RLS**: Configurado correctamente para operaciones CRUD
