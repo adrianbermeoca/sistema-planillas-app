@@ -188,17 +188,24 @@ export async function createTrabajador(
  * Obtiene el catálogo de Puestos de Trabajo disponibles (CU-008).
  * Permite al Coordinador seleccionar el rol que un trabajador desempeñará.
  * @param supabaseClient - Instancia del cliente de Supabase tipado
+ * @param soloActivos - Si es true, filtra solo puestos activos. Por defecto true para UIs de asignación.
  * @returns Promise con objeto { data, error }
  */
 export async function getPuestosDeTrabajo(
-  supabaseClient: SupabaseClient<Database>
+  supabaseClient: SupabaseClient<Database>,
+  soloActivos: boolean = true
 ): Promise<{ data: PuestoDeTrabajo[] | null; error: string | null }> {
   try {
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('puestos_de_trabajo')
       .select('id, nombre_puesto, tarifa_base_dia, created_at, es_activo')
-      .eq('es_activo', true) // Filtro crítico para UI de Asignación - solo puestos activos
-      .order('nombre_puesto', { ascending: true })
+
+    // Filtro condicional para UI de Asignación vs UI de Gestión
+    if (soloActivos) {
+      query = query.eq('es_activo', true)
+    }
+
+    const { data, error } = await query.order('nombre_puesto', { ascending: true })
 
     if (error) {
       return { data: null, error: `Error al obtener puestos: ${error.message}` }
