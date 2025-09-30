@@ -14,6 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
+      campos: {
+        Row: {
+          created_at: string
+          id: number
+          nombre: string
+          tipo_tenencia: Database["public"]["Enums"]["tipo_tenencia_enum"]
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          nombre: string
+          tipo_tenencia: Database["public"]["Enums"]["tipo_tenencia_enum"]
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          nombre?: string
+          tipo_tenencia?: Database["public"]["Enums"]["tipo_tenencia_enum"]
+        }
+        Relationships: []
+      }
+      equipos: {
+        Row: {
+          bonificacion_uso_equipo: number | null
+          created_at: string
+          id: number
+          nombre: string
+          tipo: string | null
+        }
+        Insert: {
+          bonificacion_uso_equipo?: number | null
+          created_at?: string
+          id?: never
+          nombre: string
+          tipo?: string | null
+        }
+        Update: {
+          bonificacion_uso_equipo?: number | null
+          created_at?: string
+          id?: never
+          nombre?: string
+          tipo?: string | null
+        }
+        Relationships: []
+      }
+      labor: {
+        Row: {
+          created_at: string
+          es_activo: boolean
+          es_labor_generica: boolean
+          id: number
+          indicador_destajo: string | null
+          metodo_pago: Database["public"]["Enums"]["metodo_pago_enum"]
+          nombre_labor: string
+          tarifa_destajo: number
+        }
+        Insert: {
+          created_at?: string
+          es_activo?: boolean
+          es_labor_generica?: boolean
+          id?: never
+          indicador_destajo?: string | null
+          metodo_pago: Database["public"]["Enums"]["metodo_pago_enum"]
+          nombre_labor: string
+          tarifa_destajo?: number
+        }
+        Update: {
+          created_at?: string
+          es_activo?: boolean
+          es_labor_generica?: boolean
+          id?: never
+          indicador_destajo?: string | null
+          metodo_pago?: Database["public"]["Enums"]["metodo_pago_enum"]
+          nombre_labor?: string
+          tarifa_destajo?: number
+        }
+        Relationships: []
+      }
+      lotes: {
+        Row: {
+          area_ha: number | null
+          campo_id: number
+          created_at: string
+          id: number
+          nombre: string
+        }
+        Insert: {
+          area_ha?: number | null
+          campo_id: number
+          created_at?: string
+          id?: never
+          nombre: string
+        }
+        Update: {
+          area_ha?: number | null
+          campo_id?: number
+          created_at?: string
+          id?: never
+          nombre?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotes_campo_id_fkey"
+            columns: ["campo_id"]
+            isOneToOne: false
+            referencedRelation: "campos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordenes_de_trabajo: {
+        Row: {
+          created_at: string
+          descripcion: string
+          estado: string
+          fecha_planificacion_fin: string | null
+          fecha_planificacion_inicio: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          estado?: string
+          fecha_planificacion_fin?: string | null
+          fecha_planificacion_inicio: string
+          id?: never
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          fecha_planificacion_fin?: string | null
+          fecha_planificacion_inicio?: string
+          id?: never
+        }
+        Relationships: []
+      }
+      ot_labor_detalle: {
+        Row: {
+          created_at: string
+          horas_estimadas: number | null
+          id: number
+          labor_id: number
+          ot_id: number
+          sublote_id: number
+        }
+        Insert: {
+          created_at?: string
+          horas_estimadas?: number | null
+          id?: never
+          labor_id: number
+          ot_id: number
+          sublote_id: number
+        }
+        Update: {
+          created_at?: string
+          horas_estimadas?: number | null
+          id?: never
+          labor_id?: number
+          ot_id?: number
+          sublote_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_labor_detalle_labor_id_fkey"
+            columns: ["labor_id"]
+            isOneToOne: false
+            referencedRelation: "labor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_labor_detalle_ot_id_fkey"
+            columns: ["ot_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_de_trabajo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_labor_detalle_sublote_id_fkey"
+            columns: ["sublote_id"]
+            isOneToOne: false
+            referencedRelation: "sublotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parametros_legales: {
         Row: {
           created_at: string
@@ -21,7 +207,7 @@ export type Database = {
           fecha_fin_vigencia: string | null
           fecha_inicio_vigencia: string
           id: number
-          tipo: Database["public"]["Enums"]["tipo_parametro"]
+          tipo: Database["public"]["Enums"]["tipo_parametro_legal_enum"]
           valor: number
         }
         Insert: {
@@ -29,8 +215,8 @@ export type Database = {
           descripcion?: string | null
           fecha_fin_vigencia?: string | null
           fecha_inicio_vigencia: string
-          id?: number
-          tipo: Database["public"]["Enums"]["tipo_parametro"]
+          id?: never
+          tipo: Database["public"]["Enums"]["tipo_parametro_legal_enum"]
           valor: number
         }
         Update: {
@@ -38,9 +224,59 @@ export type Database = {
           descripcion?: string | null
           fecha_fin_vigencia?: string | null
           fecha_inicio_vigencia?: string
-          id?: number
-          tipo?: Database["public"]["Enums"]["tipo_parametro"]
+          id?: never
+          tipo?: Database["public"]["Enums"]["tipo_parametro_legal_enum"]
           valor?: number
+        }
+        Relationships: []
+      }
+      partes_diarios: {
+        Row: {
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_parte_diario_enum"]
+          fecha_parte: string
+          id: number
+          supervisor_id: string
+        }
+        Insert: {
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_parte_diario_enum"]
+          fecha_parte: string
+          id?: never
+          supervisor_id: string
+        }
+        Update: {
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_parte_diario_enum"]
+          fecha_parte?: string
+          id?: never
+          supervisor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partes_diarios_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          id: string
+          nombre_completo: string | null
+          rol: Database["public"]["Enums"]["rol_usuario_enum"]
+        }
+        Insert: {
+          id: string
+          nombre_completo?: string | null
+          rol: Database["public"]["Enums"]["rol_usuario_enum"]
+        }
+        Update: {
+          id?: string
+          nombre_completo?: string | null
+          rol?: Database["public"]["Enums"]["rol_usuario_enum"]
         }
         Relationships: []
       }
@@ -73,18 +309,160 @@ export type Database = {
         Insert: {
           created_at?: string
           es_activo?: boolean | null
-          id?: number
+          id?: never
           nombre_puesto: string
           tarifa_base_dia?: number
         }
         Update: {
           created_at?: string
           es_activo?: boolean | null
-          id?: number
+          id?: never
           nombre_puesto?: string
           tarifa_base_dia?: number
         }
         Relationships: []
+      }
+      sublotes: {
+        Row: {
+          created_at: string
+          es_proyecto: boolean
+          id: number
+          lote_id: number
+          nombre: string
+          num_cilindros: number | null
+          variedad_cultivo: string | null
+        }
+        Insert: {
+          created_at?: string
+          es_proyecto?: boolean
+          id?: never
+          lote_id: number
+          nombre: string
+          num_cilindros?: number | null
+          variedad_cultivo?: string | null
+        }
+        Update: {
+          created_at?: string
+          es_proyecto?: boolean
+          id?: never
+          lote_id?: number
+          nombre?: string
+          num_cilindros?: number | null
+          variedad_cultivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sublotes_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tareo_detalle: {
+        Row: {
+          bonificacion_adicional: number | null
+          created_at: string
+          equipo_id: number | null
+          es_dia_excepcional: boolean | null
+          factor_ajuste_dia: number | null
+          horas_extras: number | null
+          horas_imputadas: number | null
+          id: number
+          labor_id: number
+          ot_labor_detalle_id: number | null
+          parte_diario_id: number
+          sublote_id: number
+          trabajador_id: number
+          trabajador_puesto_id: number | null
+          unidad_avance: number | null
+        }
+        Insert: {
+          bonificacion_adicional?: number | null
+          created_at?: string
+          equipo_id?: number | null
+          es_dia_excepcional?: boolean | null
+          factor_ajuste_dia?: number | null
+          horas_extras?: number | null
+          horas_imputadas?: number | null
+          id?: never
+          labor_id: number
+          ot_labor_detalle_id?: number | null
+          parte_diario_id: number
+          sublote_id: number
+          trabajador_id: number
+          trabajador_puesto_id?: number | null
+          unidad_avance?: number | null
+        }
+        Update: {
+          bonificacion_adicional?: number | null
+          created_at?: string
+          equipo_id?: number | null
+          es_dia_excepcional?: boolean | null
+          factor_ajuste_dia?: number | null
+          horas_extras?: number | null
+          horas_imputadas?: number | null
+          id?: never
+          labor_id?: number
+          ot_labor_detalle_id?: number | null
+          parte_diario_id?: number
+          sublote_id?: number
+          trabajador_id?: number
+          trabajador_puesto_id?: number | null
+          unidad_avance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tareo_detalle_equipo_id_fkey"
+            columns: ["equipo_id"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_labor_id_fkey"
+            columns: ["labor_id"]
+            isOneToOne: false
+            referencedRelation: "labor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_ot_labor_detalle_id_fkey"
+            columns: ["ot_labor_detalle_id"]
+            isOneToOne: false
+            referencedRelation: "ot_labor_detalle"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_parte_diario_id_fkey"
+            columns: ["parte_diario_id"]
+            isOneToOne: false
+            referencedRelation: "partes_diarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_sublote_id_fkey"
+            columns: ["sublote_id"]
+            isOneToOne: false
+            referencedRelation: "sublotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_trabajador_id_fkey"
+            columns: ["trabajador_id"]
+            isOneToOne: false
+            referencedRelation: "trabajadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tareo_detalle_trabajador_puesto_id_fkey"
+            columns: ["trabajador_puesto_id"]
+            isOneToOne: false
+            referencedRelation: "trabajador_puestos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trabajador_puestos: {
         Row: {
@@ -102,7 +480,7 @@ export type Database = {
           es_activo?: boolean
           fecha_fin?: string | null
           fecha_inicio: string
-          id?: number
+          id?: never
           puesto_id: number
           tarifa_acordada: number
           trabajador_id: number
@@ -112,7 +490,7 @@ export type Database = {
           es_activo?: boolean
           fecha_fin?: string | null
           fecha_inicio?: string
-          id?: number
+          id?: never
           puesto_id?: number
           tarifa_acordada?: number
           trabajador_id?: number
@@ -139,21 +517,21 @@ export type Database = {
           created_at: string
           dni: string
           id: number
-          modalidad_principal: Database["public"]["Enums"]["modalidad_laboral"]
+          modalidad_principal: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo: string
         }
         Insert: {
           created_at?: string
           dni: string
-          id?: number
-          modalidad_principal: Database["public"]["Enums"]["modalidad_laboral"]
+          id?: never
+          modalidad_principal: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo: string
         }
         Update: {
           created_at?: string
           dni?: string
-          id?: number
-          modalidad_principal?: Database["public"]["Enums"]["modalidad_laboral"]
+          id?: never
+          modalidad_principal?: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo?: string
         }
         Relationships: []
@@ -210,13 +588,28 @@ export type Database = {
         | "UNIVERSITY_OF_TEXAS_AT_AUSTIN"
         | "X11_WEB"
         | "XONA_COM"
+      estado_parte_diario_enum: "Pendiente" | "Aprobado" | "Rechazado"
+      metodo_pago_enum: "PorTiempo" | "PorDestajo"
       modalidad_laboral: "planilla" | "rh" | "eventual"
+      modalidad_trabajador_enum: "Planilla" | "RH" | "Eventual"
+      rol_usuario_enum: "Coordinador de Operaciones" | "Supervisor de Campo"
       tipo_parametro:
         | "rmv"
         | "tasa_bono_beta"
         | "tasa_gratificacion"
         | "tasa_cts"
         | "tasa_essalud_extra"
+      tipo_parametro_legal_enum:
+        | "RMV"
+        | "Tasa Bono BETA"
+        | "Tasa Gratificacion"
+        | "Tasa CTS"
+        | "Tasa EsSalud"
+        | "Tasa ONP"
+        | "Tasa AFP Flujo"
+        | "Tasa HE 25"
+        | "Tasa HE 35"
+      tipo_tenencia_enum: "Propio" | "Alquilado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -389,7 +782,11 @@ export const Constants = {
         "X11_WEB",
         "XONA_COM",
       ],
+      estado_parte_diario_enum: ["Pendiente", "Aprobado", "Rechazado"],
+      metodo_pago_enum: ["PorTiempo", "PorDestajo"],
       modalidad_laboral: ["planilla", "rh", "eventual"],
+      modalidad_trabajador_enum: ["Planilla", "RH", "Eventual"],
+      rol_usuario_enum: ["Coordinador de Operaciones", "Supervisor de Campo"],
       tipo_parametro: [
         "rmv",
         "tasa_bono_beta",
@@ -397,6 +794,18 @@ export const Constants = {
         "tasa_cts",
         "tasa_essalud_extra",
       ],
+      tipo_parametro_legal_enum: [
+        "RMV",
+        "Tasa Bono BETA",
+        "Tasa Gratificacion",
+        "Tasa CTS",
+        "Tasa EsSalud",
+        "Tasa ONP",
+        "Tasa AFP Flujo",
+        "Tasa HE 25",
+        "Tasa HE 35",
+      ],
+      tipo_tenencia_enum: ["Propio", "Alquilado"],
     },
   },
 } as const
