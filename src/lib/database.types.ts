@@ -65,18 +65,21 @@ export type Database = {
       puestos_de_trabajo: {
         Row: {
           created_at: string
+          es_activo: boolean | null
           id: number
           nombre_puesto: string
           tarifa_base_dia: number
         }
         Insert: {
           created_at?: string
+          es_activo?: boolean | null
           id?: number
           nombre_puesto: string
           tarifa_base_dia?: number
         }
         Update: {
           created_at?: string
+          es_activo?: boolean | null
           id?: number
           nombre_puesto?: string
           tarifa_base_dia?: number

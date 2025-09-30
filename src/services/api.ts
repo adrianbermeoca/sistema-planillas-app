@@ -196,7 +196,8 @@ export async function getPuestosDeTrabajo(
   try {
     const { data, error } = await supabaseClient
       .from('puestos_de_trabajo')
-      .select('id, nombre_puesto, tarifa_base_dia, created_at')
+      .select('id, nombre_puesto, tarifa_base_dia, created_at, es_activo')
+      .eq('es_activo', true) // Filtro crítico para UI de Asignación - solo puestos activos
       .order('nombre_puesto', { ascending: true })
 
     if (error) {
@@ -491,35 +492,18 @@ export async function updatePuesto(
 
 
 /**
- * NOTA: La tabla puestos_de_trabajo actualmente NO tiene campo es_activo.
- * Esta función está preparada para cuando se agregue el campo a la base de datos.
- *
- * Alternativa actual: Usar soft delete estableciendo tarifa_base_dia en 0 o -1,
- * o simplemente DELETE si se decide remover físicamente.
- *
+ * Realiza la baja lógica (soft delete) o reactivación de un Puesto de Trabajo (CU-008).
  * @param supabaseClient - Instancia del cliente de Supabase tipado
- * @param puestoId - ID del puesto
- * @param nuevoEstado - true para activar, false para dar de baja
+ * @param puestoId - ID del puesto a modificar
+ * @param nuevoEstado - El estado a establecer (false = inactivo / baja lógica)
  * @returns Promise con objeto { data, error }
  */
 export async function togglePuestoStatus(
   supabaseClient: SupabaseClient<Database>,
   puestoId: string | number,
   nuevoEstado: boolean
-): Promise<{ data: any | null; error: string | null }> {
-  console.log('API: Intentando cambiar estado del puesto:', puestoId, 'a', nuevoEstado)
-
-  // NOTA IMPORTANTE: La tabla puestos_de_trabajo NO tiene campo es_activo actualmente
-  // Esta implementación requiere añadir el campo a la base de datos primero
-
-  return {
-    data: null,
-    error: 'La tabla puestos_de_trabajo no tiene campo es_activo. ' +
-           'Para implementar baja lógica, primero agrega el campo: ' +
-           'ALTER TABLE puestos_de_trabajo ADD COLUMN es_activo BOOLEAN DEFAULT true;'
-  }
-
-  /* Implementación futura cuando se agregue el campo es_activo:
+): Promise<{ data: PuestoDeTrabajo | null; error: string | null }> {
+  console.log(`API: Intentando cambiar estado del puesto ${puestoId} a ${nuevoEstado}`)
 
   try {
     const { data, error } = await supabaseClient
@@ -527,6 +511,7 @@ export async function togglePuestoStatus(
       .update({ es_activo: nuevoEstado })
       .eq('id', puestoId)
       .select()
+      .single()
 
     if (error) {
       return {
@@ -535,8 +520,8 @@ export async function togglePuestoStatus(
       }
     }
 
-    console.log('API: Estado del puesto actualizado:', data)
-    return { data, error: null }
+    console.log('API: Estado del puesto actualizado con éxito:', data)
+    return { data: data as PuestoDeTrabajo, error: null }
 
   } catch (e) {
     console.error('API: Excepción no controlada al cambiar estado del puesto', e)
@@ -545,7 +530,6 @@ export async function togglePuestoStatus(
       error: 'Error de red o excepción inesperada.'
     }
   }
-  */
 }
 
 
