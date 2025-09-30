@@ -7,6 +7,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // Cliente tipado de Supabase con el esquema de la base de datos
 export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 
+// Función helper para crear una nueva instancia del cliente (útil en Server Components)
+export function createClient() {
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+}
+
 // Exportar tipos para facilitar su uso en componentes
 export type { Database, Tables, TablesInsert, TablesUpdate, Enums } from '@/lib/database.types'
 

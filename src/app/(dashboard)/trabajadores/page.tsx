@@ -5,6 +5,8 @@ import Table from '@/components/ui/Table'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import FormularioTrabajador from '@/components/domain/FormularioTrabajador'
+import ModalEdicionTrabajador from '@/components/domain/ModalEdicionTrabajador'
+import ModalAsignacionPuesto from '@/components/domain/ModalAsignacionPuesto'
 import { getTrabajadores, type Trabajador } from '@/services/api'
 import { createClient } from '@/lib/supabase/client'
 
@@ -12,7 +14,12 @@ export default function TrabajadoresPage() {
   const [trabajadoresList, setTrabajadoresList] = useState<Trabajador[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Estados de control de modales
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
+  const [selectedTrabajador, setSelectedTrabajador] = useState<Trabajador | null>(null)
 
   // Función para cargar la lista de trabajadores
   const loadTrabajadores = async () => {
@@ -42,15 +49,34 @@ export default function TrabajadoresPage() {
     loadTrabajadores()
   }
 
-  // Formatear los datos para la tabla
-  const formatTableData = () => {
-    return trabajadoresList.map((trabajador) => ({
-      'ID': trabajador.id,
-      'Nombre Completo': trabajador.nombre_completo,
-      'DNI': trabajador.dni,
-      'Modalidad': formatModalidad(trabajador.modalidad_principal),
-      'Fecha Registro': formatFecha(trabajador.created_at)
-    }))
+  // Callback para recargar después de edición o asignación
+  const handleActionSuccess = () => {
+    setIsEditModalOpen(false)
+    setIsAssignmentModalOpen(false)
+    setSelectedTrabajador(null)
+    loadTrabajadores()
+  }
+
+  // Manejadores de acciones
+  const handleEditarTrabajador = (trabajador: Trabajador) => {
+    setSelectedTrabajador(trabajador)
+    setIsEditModalOpen(true)
+  }
+
+  const handleAsignarPuesto = (trabajador: Trabajador) => {
+    setSelectedTrabajador(trabajador)
+    setIsAssignmentModalOpen(true)
+  }
+
+  // Cerrar modales de acción
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setSelectedTrabajador(null)
+  }
+
+  const handleCloseAssignmentModal = () => {
+    setIsAssignmentModalOpen(false)
+    setSelectedTrabajador(null)
   }
 
   // Formatear la modalidad laboral para mejor legibilidad
@@ -84,14 +110,26 @@ export default function TrabajadoresPage() {
         </p>
       </div>
 
-      {/* Botón para abrir el modal de registro */}
-      <div className="mb-6">
-        <Button
-          variant="primary"
-          onClick={() => setIsModalOpen(true)}
-        >
-          + Registrar Nuevo Trabajador
-        </Button>
+      {/* Header de acciones */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <Button
+            variant="primary"
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Registrar Nuevo Trabajador
+          </Button>
+        </div>
+
+        {/* Info de ayuda */}
+        <div className="text-sm text-gray-600">
+          <span className="inline-flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Solo trabajadores de <strong>Planilla</strong> pueden tener múltiples puestos asignados (CU-009)
+          </span>
+        </div>
       </div>
 
       {/* Estados de carga y error */}
@@ -118,7 +156,7 @@ export default function TrabajadoresPage() {
         </div>
       )}
 
-      {/* Tabla de trabajadores */}
+      {/* Tabla de trabajadores con acciones */}
       {!loading && !error && (
         <div className="bg-white rounded-lg shadow">
           {/* Stats */}
@@ -131,11 +169,95 @@ export default function TrabajadoresPage() {
             </p>
           </div>
 
-          {/* Tabla */}
-          <Table
-            headers={['ID', 'Nombre Completo', 'DNI', 'Modalidad', 'Fecha Registro']}
-            data={formatTableData()}
-          />
+          {/* Tabla customizada con botones de acción */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse bg-white">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    Nombre Completo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    DNI
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    Modalidad
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    Fecha Registro
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {trabajadoresList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      No hay trabajadores registrados
+                    </td>
+                  </tr>
+                ) : (
+                  trabajadoresList.map((trabajador) => (
+                    <tr
+                      key={trabajador.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {trabajador.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {trabajador.nombre_completo}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {trabajador.dni}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatModalidad(trabajador.modalidad_principal)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatFecha(trabajador.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        <div className="flex justify-center gap-2">
+                          {/* Botón Editar - Disponible para todos */}
+                          <button
+                            onClick={() => handleEditarTrabajador(trabajador)}
+                            className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            title="Editar información del trabajador"
+                          >
+                            ✏️ Editar
+                          </button>
+
+                          {/* Botón Asignar Puesto - Solo para trabajadores de Planilla */}
+                          {trabajador.modalidad_principal === 'planilla' && (
+                            <button
+                              onClick={() => handleAsignarPuesto(trabajador)}
+                              className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 rounded hover:bg-green-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                              title="Asignar puesto de trabajo (Multimodalidad - CU-009)"
+                            >
+                              👔 Asignar Puesto
+                            </button>
+                          )}
+
+                          {/* Badge informativo para Eventuales/RH */}
+                          {(trabajador.modalidad_principal === 'eventual' || trabajador.modalidad_principal === 'rh') && (
+                            <span className="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded cursor-help" title="Los trabajadores eventuales y RH tienen tarifa fija, no requieren asignación de puesto">
+                              Tarifa Fija
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -151,6 +273,26 @@ export default function TrabajadoresPage() {
           onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      {/* Modal de edición de trabajador */}
+      {selectedTrabajador && (
+        <ModalEdicionTrabajador
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          trabajador={selectedTrabajador}
+          onSuccess={handleActionSuccess}
+        />
+      )}
+
+      {/* Modal de asignación de puesto */}
+      {selectedTrabajador && (
+        <ModalAsignacionPuesto
+          isOpen={isAssignmentModalOpen}
+          onClose={handleCloseAssignmentModal}
+          trabajador={selectedTrabajador}
+          onSuccess={handleActionSuccess}
+        />
+      )}
     </div>
   )
 }

@@ -26,6 +26,10 @@ export interface TrabajadorPuestoPayload {
 // Tipo para actualización parcial de trabajador
 export type TrabajadorUpdate = Database['public']['Tables']['trabajadores']['Update']
 
+// Tipos para operaciones de Puestos de Trabajo
+export type PuestoDeTrabajoInsert = Database['public']['Tables']['puestos_de_trabajo']['Insert']
+export type PuestoDeTrabajoUpdate = Database['public']['Tables']['puestos_de_trabajo']['Update']
+
 /**
  * Obtiene todos los parámetros legales desde Supabase
  * Ordena por fecha de inicio de vigencia (más reciente primero) y tipo
@@ -353,6 +357,238 @@ export async function toggleTrabajadorStatus(
 
   } catch (e) {
     console.error('API: Excepción no controlada al cambiar estado del trabajador', e)
+    return {
+      data: null,
+      error: 'Error de red o excepción inesperada.'
+    }
+  }
+}
+
+
+/**
+ * Crea un nuevo puesto de trabajo en el catálogo (CU-008).
+ * @param supabaseClient - Instancia del cliente de Supabase tipado
+ * @param nombre_puesto - Nombre del puesto de trabajo
+ * @param tarifa_base_dia - Tarifa base diaria del puesto
+ * @returns Promise con objeto { data, error }
+ */
+export async function createPuesto(
+  supabaseClient: SupabaseClient<Database>,
+  nombre_puesto: string,
+  tarifa_base_dia: number
+): Promise<{ data: PuestoDeTrabajo | null; error: string | null }> {
+  console.log('API: Intentando crear puesto:', { nombre_puesto, tarifa_base_dia })
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('puestos_de_trabajo')
+      .insert({
+        nombre_puesto: nombre_puesto.trim(),
+        tarifa_base_dia: parseFloat(tarifa_base_dia.toString())
+      })
+      .select()
+      .single()
+
+    if (error) {
+      // Detectar error de nombre duplicado
+      if (isPostgrestError(error) && error.code === '23505') {
+        return {
+          data: null,
+          error: 'Ya existe un puesto con ese nombre en el catálogo.'
+        }
+      }
+      return {
+        data: null,
+        error: `Error al crear puesto: ${error.message}`
+      }
+    }
+
+    if (!data) {
+      return {
+        data: null,
+        error: 'No se recibieron datos después de la inserción.'
+      }
+    }
+
+    console.log('API: Puesto creado con éxito:', data)
+    return { data: data as PuestoDeTrabajo, error: null }
+
+  } catch (e) {
+    console.error('API: Excepción no controlada al crear puesto', e)
+    return {
+      data: null,
+      error: 'Error de red o excepción inesperada.'
+    }
+  }
+}
+
+
+/**
+ * Actualiza los datos de un puesto de trabajo existente (CU-008).
+ * @param supabaseClient - Instancia del cliente de Supabase tipado
+ * @param puestoId - ID del puesto a actualizar
+ * @param updateData - Datos parciales a actualizar
+ * @returns Promise con objeto { data, error }
+ */
+export async function updatePuesto(
+  supabaseClient: SupabaseClient<Database>,
+  puestoId: string | number,
+  updateData: Partial<PuestoDeTrabajoUpdate>
+): Promise<{ data: PuestoDeTrabajo | null; error: string | null }> {
+  console.log('API: Intentando actualizar puesto:', puestoId, updateData)
+
+  try {
+    // Limpiar y formatear datos
+    const cleanData: Partial<PuestoDeTrabajoUpdate> = {}
+
+    if (updateData.nombre_puesto !== undefined) {
+      cleanData.nombre_puesto = updateData.nombre_puesto.trim()
+    }
+
+    if (updateData.tarifa_base_dia !== undefined) {
+      cleanData.tarifa_base_dia = parseFloat(updateData.tarifa_base_dia.toString())
+    }
+
+    const { data, error } = await supabaseClient
+      .from('puestos_de_trabajo')
+      .update(cleanData)
+      .eq('id', puestoId)
+      .select()
+      .single()
+
+    if (error) {
+      // Detectar error de nombre duplicado
+      if (isPostgrestError(error) && error.code === '23505') {
+        return {
+          data: null,
+          error: 'Ya existe un puesto con ese nombre en el catálogo.'
+        }
+      }
+      return {
+        data: null,
+        error: `Error al actualizar puesto: ${error.message}`
+      }
+    }
+
+    if (!data) {
+      return {
+        data: null,
+        error: 'No se encontró el puesto para actualizar.'
+      }
+    }
+
+    console.log('API: Puesto actualizado con éxito:', data)
+    return { data: data as PuestoDeTrabajo, error: null }
+
+  } catch (e) {
+    console.error('API: Excepción no controlada al actualizar puesto', e)
+    return {
+      data: null,
+      error: 'Error de red o excepción inesperada.'
+    }
+  }
+}
+
+
+/**
+ * NOTA: La tabla puestos_de_trabajo actualmente NO tiene campo es_activo.
+ * Esta función está preparada para cuando se agregue el campo a la base de datos.
+ *
+ * Alternativa actual: Usar soft delete estableciendo tarifa_base_dia en 0 o -1,
+ * o simplemente DELETE si se decide remover físicamente.
+ *
+ * @param supabaseClient - Instancia del cliente de Supabase tipado
+ * @param puestoId - ID del puesto
+ * @param nuevoEstado - true para activar, false para dar de baja
+ * @returns Promise con objeto { data, error }
+ */
+export async function togglePuestoStatus(
+  supabaseClient: SupabaseClient<Database>,
+  puestoId: string | number,
+  nuevoEstado: boolean
+): Promise<{ data: any | null; error: string | null }> {
+  console.log('API: Intentando cambiar estado del puesto:', puestoId, 'a', nuevoEstado)
+
+  // NOTA IMPORTANTE: La tabla puestos_de_trabajo NO tiene campo es_activo actualmente
+  // Esta implementación requiere añadir el campo a la base de datos primero
+
+  return {
+    data: null,
+    error: 'La tabla puestos_de_trabajo no tiene campo es_activo. ' +
+           'Para implementar baja lógica, primero agrega el campo: ' +
+           'ALTER TABLE puestos_de_trabajo ADD COLUMN es_activo BOOLEAN DEFAULT true;'
+  }
+
+  /* Implementación futura cuando se agregue el campo es_activo:
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('puestos_de_trabajo')
+      .update({ es_activo: nuevoEstado })
+      .eq('id', puestoId)
+      .select()
+
+    if (error) {
+      return {
+        data: null,
+        error: `Error al cambiar estado del puesto: ${error.message}`
+      }
+    }
+
+    console.log('API: Estado del puesto actualizado:', data)
+    return { data, error: null }
+
+  } catch (e) {
+    console.error('API: Excepción no controlada al cambiar estado del puesto', e)
+    return {
+      data: null,
+      error: 'Error de red o excepción inesperada.'
+    }
+  }
+  */
+}
+
+
+/**
+ * Elimina físicamente un puesto de trabajo del catálogo (CU-008).
+ * PRECAUCIÓN: Solo debe usarse si no hay asignaciones activas en trabajador_puestos.
+ * @param supabaseClient - Instancia del cliente de Supabase tipado
+ * @param puestoId - ID del puesto a eliminar
+ * @returns Promise con objeto { data, error }
+ */
+export async function deletePuesto(
+  supabaseClient: SupabaseClient<Database>,
+  puestoId: string | number
+): Promise<{ data: any | null; error: string | null }> {
+  console.log('API: Intentando eliminar puesto:', puestoId)
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('puestos_de_trabajo')
+      .delete()
+      .eq('id', puestoId)
+      .select()
+
+    if (error) {
+      // Detectar error de constraint de FK (hay asignaciones activas)
+      if (isPostgrestError(error) && error.code === '23503') {
+        return {
+          data: null,
+          error: 'No se puede eliminar el puesto porque hay trabajadores asignados a él. ' +
+                 'Desactiva primero las asignaciones en trabajador_puestos.'
+        }
+      }
+      return {
+        data: null,
+        error: `Error al eliminar puesto: ${error.message}`
+      }
+    }
+
+    console.log('API: Puesto eliminado con éxito')
+    return { data, error: null }
+
+  } catch (e) {
+    console.error('API: Excepción no controlada al eliminar puesto', e)
     return {
       data: null,
       error: 'Error de red o excepción inesperada.'

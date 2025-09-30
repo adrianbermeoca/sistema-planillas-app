@@ -23,7 +23,7 @@ export default function DashboardLayout({
               <ul className="space-y-1">
                 <li>
                   <a
-                    href="/dashboard"
+                    href="/"
                     className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100"
                   >
                     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
