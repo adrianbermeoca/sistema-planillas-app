@@ -132,6 +132,7 @@ export type Database = {
           fecha_planificacion_fin: string | null
           fecha_planificacion_inicio: string
           id: number
+          supervisor_id: string | null
         }
         Insert: {
           created_at?: string
@@ -140,6 +141,7 @@ export type Database = {
           fecha_planificacion_fin?: string | null
           fecha_planificacion_inicio: string
           id?: never
+          supervisor_id?: string | null
         }
         Update: {
           created_at?: string
@@ -148,8 +150,17 @@ export type Database = {
           fecha_planificacion_fin?: string | null
           fecha_planificacion_inicio?: string
           id?: never
+          supervisor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ordenes_de_trabajo_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ot_labor_detalle: {
         Row: {
@@ -322,6 +333,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sistemas_pensiones: {
+        Row: {
+          id: number
+          nombre: string
+          tipo_sistema: string
+        }
+        Insert: {
+          id?: never
+          nombre: string
+          tipo_sistema: string
+        }
+        Update: {
+          id?: never
+          nombre?: string
+          tipo_sistema?: string
+        }
+        Relationships: []
+      }
       sublotes: {
         Row: {
           created_at: string
@@ -464,6 +493,119 @@ export type Database = {
           },
         ]
       }
+      tasas_legales_progresivas: {
+        Row: {
+          created_at: string
+          descripcion: string
+          es_activo: boolean
+          fecha_fin_vigencia: string | null
+          fecha_inicio_vigencia: string
+          id: number
+          num_trabajadores_max: number | null
+          num_trabajadores_min: number | null
+          tasa_porcentaje: number
+          tipo_tasa: Database["public"]["Enums"]["tipo_tasa_legal_enum"]
+          ventas_uit_max: number | null
+          ventas_uit_min: number | null
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          es_activo?: boolean
+          fecha_fin_vigencia?: string | null
+          fecha_inicio_vigencia: string
+          id?: never
+          num_trabajadores_max?: number | null
+          num_trabajadores_min?: number | null
+          tasa_porcentaje: number
+          tipo_tasa: Database["public"]["Enums"]["tipo_tasa_legal_enum"]
+          ventas_uit_max?: number | null
+          ventas_uit_min?: number | null
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          es_activo?: boolean
+          fecha_fin_vigencia?: string | null
+          fecha_inicio_vigencia?: string
+          id?: never
+          num_trabajadores_max?: number | null
+          num_trabajadores_min?: number | null
+          tasa_porcentaje?: number
+          tipo_tasa?: Database["public"]["Enums"]["tipo_tasa_legal_enum"]
+          ventas_uit_max?: number | null
+          ventas_uit_min?: number | null
+        }
+        Relationships: []
+      }
+      tasas_pensiones_vigencia: {
+        Row: {
+          fecha_inicio_vigencia: string
+          id: number
+          remuneracion_maxima_asegururable: number | null
+          sistema_pension_id: number
+          tasa_aporte_obligatorio_pct: number
+          tasa_comision_flujo_pct: number
+          tasa_comision_saldo_pct: number
+          tasa_prima_seguro_pct: number
+        }
+        Insert: {
+          fecha_inicio_vigencia: string
+          id?: never
+          remuneracion_maxima_asegururable?: number | null
+          sistema_pension_id: number
+          tasa_aporte_obligatorio_pct?: number
+          tasa_comision_flujo_pct?: number
+          tasa_comision_saldo_pct?: number
+          tasa_prima_seguro_pct?: number
+        }
+        Update: {
+          fecha_inicio_vigencia?: string
+          id?: never
+          remuneracion_maxima_asegururable?: number | null
+          sistema_pension_id?: number
+          tasa_aporte_obligatorio_pct?: number
+          tasa_comision_flujo_pct?: number
+          tasa_comision_saldo_pct?: number
+          tasa_prima_seguro_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasas_pensiones_vigencia_sistema_pension_id_fkey"
+            columns: ["sistema_pension_id"]
+            isOneToOne: false
+            referencedRelation: "sistemas_pensiones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasas_sctr: {
+        Row: {
+          actividad_descripcion: string
+          ciiu_codigo: string | null
+          fecha_inicio_vigencia: string
+          id: number
+          tasa_pension_pct: number
+          tasa_salud_pct: number
+        }
+        Insert: {
+          actividad_descripcion: string
+          ciiu_codigo?: string | null
+          fecha_inicio_vigencia: string
+          id?: never
+          tasa_pension_pct?: number
+          tasa_salud_pct?: number
+        }
+        Update: {
+          actividad_descripcion?: string
+          ciiu_codigo?: string | null
+          fecha_inicio_vigencia?: string
+          id?: never
+          tasa_pension_pct?: number
+          tasa_salud_pct?: number
+        }
+        Relationships: []
+      }
       trabajador_puestos: {
         Row: {
           created_at: string
@@ -519,6 +661,12 @@ export type Database = {
           id: number
           modalidad_principal: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo: string
+          opcion_pago_beneficios: Database["public"]["Enums"]["opcion_pago_beneficios_enum"]
+          sistema_pension_id: number | null
+          tiene_asignacion_familiar: boolean
+          tipo_comision_afp:
+            | Database["public"]["Enums"]["tipo_comision_afp_enum"]
+            | null
         }
         Insert: {
           created_at?: string
@@ -526,6 +674,12 @@ export type Database = {
           id?: never
           modalidad_principal: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo: string
+          opcion_pago_beneficios?: Database["public"]["Enums"]["opcion_pago_beneficios_enum"]
+          sistema_pension_id?: number | null
+          tiene_asignacion_familiar?: boolean
+          tipo_comision_afp?:
+            | Database["public"]["Enums"]["tipo_comision_afp_enum"]
+            | null
         }
         Update: {
           created_at?: string
@@ -533,6 +687,44 @@ export type Database = {
           id?: never
           modalidad_principal?: Database["public"]["Enums"]["modalidad_trabajador_enum"]
           nombre_completo?: string
+          opcion_pago_beneficios?: Database["public"]["Enums"]["opcion_pago_beneficios_enum"]
+          sistema_pension_id?: number | null
+          tiene_asignacion_familiar?: boolean
+          tipo_comision_afp?:
+            | Database["public"]["Enums"]["tipo_comision_afp_enum"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trabajadores_sistema_pension_id_fkey"
+            columns: ["sistema_pension_id"]
+            isOneToOne: false
+            referencedRelation: "sistemas_pensiones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tramos_impuesto_renta: {
+        Row: {
+          fecha_inicio_vigencia: string
+          id: number
+          limite_inferior_uit: number
+          limite_superior_uit: number | null
+          tasa_porcentaje: number
+        }
+        Insert: {
+          fecha_inicio_vigencia: string
+          id?: never
+          limite_inferior_uit: number
+          limite_superior_uit?: number | null
+          tasa_porcentaje: number
+        }
+        Update: {
+          fecha_inicio_vigencia?: string
+          id?: never
+          limite_inferior_uit?: number
+          limite_superior_uit?: number | null
+          tasa_porcentaje?: number
         }
         Relationships: []
       }
@@ -541,7 +733,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      crear_ot_completa: {
+        Args: {
+          descripcion_ot: string
+          detalles: Database["public"]["CompositeTypes"]["ot_detalle_payload"][]
+          fecha_fin: string
+          fecha_inicio: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       color_source:
@@ -592,7 +792,14 @@ export type Database = {
       metodo_pago_enum: "PorTiempo" | "PorDestajo"
       modalidad_laboral: "planilla" | "rh" | "eventual"
       modalidad_trabajador_enum: "Planilla" | "RH" | "Eventual"
-      rol_usuario_enum: "Coordinador de Operaciones" | "Supervisor de Campo"
+      opcion_pago_beneficios_enum: "Prorrateado" | "Periodico"
+      rol_usuario_enum:
+        | "Coordinador de Operaciones"
+        | "Supervisor de Campo"
+        | "Coordinador"
+        | "Supervisor"
+        | "Gerente"
+      tipo_comision_afp_enum: "flujo" | "mixta"
       tipo_parametro:
         | "rmv"
         | "tasa_bono_beta"
@@ -609,10 +816,20 @@ export type Database = {
         | "Tasa AFP Flujo"
         | "Tasa HE 25"
         | "Tasa HE 35"
+        | "UIT"
+        | "BETA_PCT"
+        | "GRATI_PCT"
+        | "CTS_PCT"
+        | "ASIGNACION_FAMILIAR"
+      tipo_tasa_legal_enum: "ESSALUD" | "UTILIDADES"
       tipo_tenencia_enum: "Propio" | "Alquilado"
     }
     CompositeTypes: {
-      [_ in never]: never
+      ot_detalle_payload: {
+        labor_id: number | null
+        sublote_id: number | null
+        horas_estimadas: number | null
+      }
     }
   }
 }
@@ -786,7 +1003,15 @@ export const Constants = {
       metodo_pago_enum: ["PorTiempo", "PorDestajo"],
       modalidad_laboral: ["planilla", "rh", "eventual"],
       modalidad_trabajador_enum: ["Planilla", "RH", "Eventual"],
-      rol_usuario_enum: ["Coordinador de Operaciones", "Supervisor de Campo"],
+      opcion_pago_beneficios_enum: ["Prorrateado", "Periodico"],
+      rol_usuario_enum: [
+        "Coordinador de Operaciones",
+        "Supervisor de Campo",
+        "Coordinador",
+        "Supervisor",
+        "Gerente",
+      ],
+      tipo_comision_afp_enum: ["flujo", "mixta"],
       tipo_parametro: [
         "rmv",
         "tasa_bono_beta",
@@ -804,7 +1029,13 @@ export const Constants = {
         "Tasa AFP Flujo",
         "Tasa HE 25",
         "Tasa HE 35",
+        "UIT",
+        "BETA_PCT",
+        "GRATI_PCT",
+        "CTS_PCT",
+        "ASIGNACION_FAMILIAR",
       ],
+      tipo_tasa_legal_enum: ["ESSALUD", "UTILIDADES"],
       tipo_tenencia_enum: ["Propio", "Alquilado"],
     },
   },
